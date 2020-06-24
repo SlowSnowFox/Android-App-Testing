@@ -12,7 +12,6 @@ import shutil
 import argparse
 import urllib.request
 
-
 __author__ = "Jake Miller (@LaconicWolf)"
 __date__ = "20190705"
 __version__ = "0.01"
@@ -86,19 +85,21 @@ def do_keytool(keystore_name):
                           '-alias', 'android', '-keypass', 'password',
                           '-keyalg', 'RSA', '-keysize', '2048', '-validity',
                           '10000'],
-                          stdin=subprocess.PIPE, stderr=subprocess.STDOUT,
-                          stdout=FNULL, universal_newlines=True)
+                         stdin=subprocess.PIPE, stderr=subprocess.STDOUT,
+                         stdout=FNULL, universal_newlines=True)
     p.communicate(newline.join(commands))
     keystore_present = True
 
 
 def do_jarsigner(filepath, keystore):
     """Uses APKTool to create a new APK"""
-    output = subprocess.getoutput("jarsigner -verbose -keystore {} -storepass password -keypass password {} android".format(keystore, filepath))
+    output = subprocess.getoutput(
+        "jarsigner -verbose -keystore {} -storepass password -keypass password {} android".format(keystore, filepath))
     if 'jar signed.' not in output:
         print("[-] An error occurred during jarsigner: \n{}".format(output))
     else:
         print("[*] Signed!")
+
 
 def add_network_security_config(basedir):
     """Adds a network security config file that allows user 
@@ -132,7 +133,8 @@ def do_network_security_config(directory):
             filepath = os.path.join(directory, 'res', 'xml', 'network_security_config.xml')
             with open(filepath) as fh:
                 contents = fh.read()
-            new_contents = contents.replace('<trust-anchors>', '<trust-anchors>\n            <certificates src="user" />\n            <certificates src="@raw/cacert"/>')
+            new_contents = contents.replace('<trust-anchors>',
+                                            '<trust-anchors>\n            <certificates src="user" />\n            <certificates src="@raw/cacert"/>')
             with open(filepath, 'w') as fh:
                 fh.write(new_contents)
             return True
@@ -165,7 +167,7 @@ def download_burp_cert(host, port):
     # Download the file from url and save it locally under file_name:
     try:
         with urllib.request.urlopen(url) as response, open(file_name, 'wb') as out_file:
-            data = response.read() # a bytes object
+            data = response.read()  # a bytes object
             out_file.write(data)
             cert_present = True
         return file_name
@@ -179,7 +181,8 @@ def edit_manifest(filepath):
     to the manifest'''
     with open(filepath) as fh:
         contents = fh.read()
-    new_contents = contents.replace("<application ", '<application android:networkSecurityConfig="@xml/network_security_config" ')
+    new_contents = contents.replace("<application ",
+                                    '<application android:networkSecurityConfig="@xml/network_security_config" ')
     with open(filepath, 'w') as fh:
         fh.write(new_contents)
 
@@ -198,7 +201,9 @@ def main():
             missing_tools.append(tool)
     if missing_tools:
         for tool in missing_tools:
-            print("[-] {} could not be found in the current directory or in your PATH. Please ensure either of these conditions are met.".format(tool))
+            print(
+                "[-] {} could not be found in the current directory or in your PATH. Please ensure either of these conditions are met.".format(
+                    tool))
             exit()
 
     # Checks for Burp and adds the cert to the project
@@ -225,7 +230,7 @@ def main():
         print("[*] Decompiling {}...".format(file))
         if not apktool_decompile(file):
             continue
-        project_dir = file.replace('.apk', '_out') 
+        project_dir = file.replace('.apk', '_out')
 
         # Create or add to network_security_config.xml
         config_exists = do_network_security_config(project_dir)
@@ -277,7 +282,9 @@ if __name__ == '__main__':
     keystore_present = False
     if args.keystore_path:
         if not os.path.exists(args.keystore_path):
-            print("[-] The file, {}, cannot be found, or you do not have permission to open the file. Please check the file path and try again.".format(file))
+            print(
+                "[-] The file, {}, cannot be found, or you do not have permission to open the file. Please check the file path and try again.".format(
+                    file))
             exit()
         keystore_filename = args.keystore_path
         keystore_present = True
@@ -287,7 +294,9 @@ if __name__ == '__main__':
     cert_present = False
     if args.cert_path:
         if not os.path.exists(args.cert_path):
-            print("[-] The file, {}, cannot be found, or you do not have permission to open the file. Please check the file path and try again.".format(file))
+            print(
+                "[-] The file, {}, cannot be found, or you do not have permission to open the file. Please check the file path and try again.".format(
+                    file))
             exit()
         certname = args.cert_path
         cert_present = True
@@ -296,10 +305,14 @@ if __name__ == '__main__':
 
     for file in args.apk_input_file:
         if not os.path.exists(file):
-            print("[-] The file, {}, cannot be found, or you do not have permission to open the file. Please check the file path and try again.".format(file))
+            print(
+                "[-] The file, {}, cannot be found, or you do not have permission to open the file. Please check the file path and try again.".format(
+                    file))
             exit()
         if not file.endswith('.apk'):
-            print("[-] Please verify that the file, {}, is in apk file. If it is, just add .apk to the filename.".format(file))
+            print(
+                "[-] Please verify that the file, {}, is in apk file. If it is, just add .apk to the filename.".format(
+                    file))
             exit()
 
     if args.proxy.startswith('http'):
@@ -308,6 +321,6 @@ if __name__ == '__main__':
             exit()
         args.proxy = ''.join(args.proxy.split("//")[1:])
 
-    burp_host = args.proxy.split(":")[0] 
+    burp_host = args.proxy.split(":")[0]
     burp_port = int(args.proxy.split(":")[1])
     main()
