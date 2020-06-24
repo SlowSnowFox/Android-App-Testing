@@ -11,6 +11,8 @@ import os
 import shutil
 import argparse
 import urllib.request
+from xml.etree import ElementTree
+
 
 __author__ = "Jake Miller (@LaconicWolf)"
 __date__ = "20190705"
@@ -177,14 +179,16 @@ def download_burp_cert(host, port):
 
 
 def edit_manifest(filepath):
-    '''Adds android:networkSecurityConfig="@xml/network_security_config" 
-    to the manifest'''
-    with open(filepath) as fh:
-        contents = fh.read()
-    new_contents = contents.replace("<application ",
-                                    '<application android:networkSecurityConfig="@xml/network_security_config" ')
-    with open(filepath, 'w') as fh:
-        fh.write(new_contents)
+    """Adds android:networkSecurityConfig="@xml/network_security_config"
+        to the manifest"""
+    network_sec_key = '{http://schemas.android.com/apk/res/android}networkSecurityConfig'
+    network_sec_filename = "@xml/network_security_config"
+    manifest_tree = ElementTree.parse(filepath)
+    target_node = [node for node in manifest_tree.getroot().getchildren() if node.tag == "application"][0]
+    if network_sec_key in target_node.attrib:
+        print("networkSecurityConfig already configured. Overwriting previous value")
+    target_node.set(network_sec_key, network_sec_filename)
+    manifest_tree.write(filepath)
 
 
 def main():
